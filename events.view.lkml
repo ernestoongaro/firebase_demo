@@ -4,6 +4,7 @@ include: "events_generated*"
 view: events {
   sql_table_name: `firebase-public-project.analytics_153293282.events_*`  ;;
 
+
   extends: [events_generated,user_properties_generated]
 
 ### app info
@@ -157,7 +158,7 @@ view: events {
   dimension_group: event {
     type: time
     timeframes: [date, week, day_of_week, month, year]
-    sql: TIMESTAMP(PARSE_DATE('%Y%m%d', REGEXP_EXTRACT(_TABLE_SUFFIX,r'\d\d\d\d\d\d\d\d'))) ;;
+    sql: DATE_ADD(TIMESTAMP(PARSE_DATE('%Y%m%d', REGEXP_EXTRACT(_TABLE_SUFFIX,r'\d\d\d\d\d\d\d\d'))), INTERVAL DATE_DIFF(${current_date::date}, PARSE_DATE('%F','2018-10-02'),DAY) DAY) ;;
   }
 
   dimension_group: _event {

@@ -8,6 +8,9 @@ view: last {
   derived_table: {
     datagroup_trigger: sessions
     sql:
+    WITH clean AS (
+      select * EXCEPT (event_timestamp), UNIX_MICROS(TIMESTAMP_ADD(TIMESTAMP_MICROS(event_timestamp), INTERVAL DATE_DIFF(CURRENT_DATE(), PARSE_DATE('%F','2018-10-02'),DAY) DAY)) as event_timestamp  from ${events.SQL_TABLE_NAME}
+    )
       SELECT *,
               CASE WHEN TIMESTAMP_DIFF(TIMESTAMP_MICROS(event_timestamp), TIMESTAMP_MICROS(last_event),MINUTE) >= 20 --session timout = 20 minutes
                      OR last_event IS NULL
@@ -19,10 +22,6 @@ view: last {
                  FROM ${events.SQL_TABLE_NAME}
         WHERE
            event_name IN('user_engagement','screen_view') --don't look at every single event to limit rows needed
-          AND
-          --limits to this year only to save on query costs, customize this as needed
-            (((TIMESTAMP(PARSE_DATE('%Y%m%d', REGEXP_EXTRACT(_TABLE_SUFFIX,r'\d\d\d\d\d\d\d\d'))) ) >= ((TIMESTAMP_TRUNC(CAST(TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY) AS TIMESTAMP), YEAR))) AND (TIMESTAMP(PARSE_DATE('%Y%m%d', REGEXP_EXTRACT(_TABLE_SUFFIX,r'\d\d\d\d\d\d\d\d'))) ) < ((TIMESTAMP(CONCAT(CAST(DATE_ADD(CAST(TIMESTAMP_TRUNC(CAST(TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY) AS TIMESTAMP), YEAR) AS DATE), INTERVAL 1 YEAR) AS STRING), ' ', CAST(TIME(CAST(TIMESTAMP_TRUNC(CAST(TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY) AS TIMESTAMP), YEAR) AS TIMESTAMP)) AS STRING)))))))
-
         )
        ;;
   }
